@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enterprise AI with Data — Golden Ticket Demo</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --blue: #4285f4;
+      --green: #34a853;
+      --yellow: #fbbc04;
+      --red: #ea4335;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      box-shadow: 0 0 12px var(--blue);
+    }
+    .brand h1 { margin: 0; font-size: 18px; font-weight: 700; }
+    .brand span { color: var(--muted); font-size: 13px; }
+    .badges { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .badge {
+      font-size: 12px; font-weight: 600; padding: 4px 10px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text);
+    }
+    .badge.ok { border-color: var(--green); color: #86efac; }
+    .badge.warn { border-color: var(--yellow); color: #fde047; }
+    .container { max-width: 1360px; margin: 0 auto; padding: 24px 28px 60px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+    .kpi-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+    .kpi-value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .kpi-value.danger { color: #fca5a5; }
+    .kpi-value.warn { color: #fde047; }
+    .kpi-value.good { color: #86efac; }
+
+    .prompt-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .chip:hover { border-color: var(--blue); background: #1e3a5f; }
+    .input-row { display: flex; gap: 12px; }
+    textarea {
+      flex: 1;
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 54px;
+      font-family: inherit;
+    }
+    button.primary {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.danger-btn {
+      background: rgba(234, 67, 53, 0.15);
+      color: #fca5a5;
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 960px) { .split { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .answer-box {
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.65;
+      color: #e2e8f0;
+    }
+    .error-banner {
+      background: rgba(234, 67, 53, 0.12);
+      border: 1px solid var(--red);
+      color: #fecaca;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .trace-item {
+      border: 1px solid var(--border);
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .trace-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .tool-pill {
+      background: rgba(66, 133, 244, 0.2);
+      color: #93c5fd;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .tool-pill.err { background: rgba(234, 67, 53, 0.2); color: #fca5a5; }
+    pre {
+      margin: 6px 0 0;
+      padding: 10px;
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+    .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
+    .tab-btn {
+      background: var(--surface-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .tab-btn.active { color: var(--text); border-color: var(--blue); background: #1e3a5f; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <h1>Enterprise AI with Data — Agentic Operations Agent</h1>
+        <span>Python + FastAPI + Gemini Function Calling (SQL/BigQuery + Policy Grounding)</span>
+      </div>
+    </div>
+    <div class="badges">
+      <span id="backend-badge" class="badge">Backend: loading...</span>
+      <span id="auth-badge" class="badge">Gemini: checking...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">90-Day Gross Revenue</div><div class="kpi-value good" id="kpi-rev">--</div><div class="kpi-sub" id="kpi-exams">-- exams</div></div>
+      <div class="kpi-card"><div class="kpi-label">Denied Claims Revenue at Risk</div><div class="kpi-value danger" id="kpi-denied">--</div><div class="kpi-sub" id="kpi-denied-cnt">-- claims</div></div>
+      <div class="kpi-card"><div class="kpi-label">Clinical Turnaround SLA Breaches</div><div class="kpi-value warn" id="kpi-breaches">--</div><div class="kpi-sub">Across 5 diagnostic clinics</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active Equipment SLA Alerts</div><div class="kpi-value danger" id="kpi-alerts">--</div><div class="kpi-sub">Monthly uptime &lt; 96% or &gt; 12h down</div></div>
+    </section>
+
+    <section class="prompt-panel">
+      <div class="chips">
+        <button class="chip" onclick="usePrompt('Which insurance payer is causing the highest denied claims revenue, why is it happening according to our policy docs, and how much USD can we recover if we appeal and automate pre-auth (assuming $8,500 implementation cost)?')">
+          1. Revenue Leakage + Policy Root Cause + ROI
+        </button>
+        <button class="chip" onclick="usePrompt('Which clinic scanner is breaching its MedTech vendor uptime SLA, what contractual service fee credit are we owed across Oct and Nov 2026, and what action should ops take?')">
+          2. Equipment SLA Breach &amp; Vendor Penalty Credit
+        </button>
+        <button class="chip" onclick="usePrompt('Which clinics have the highest turnaround SLA breaches and what inter-clinic overflow routing should we activate under our operations playbook?')">
+          3. Clinic Turnaround &amp; Overflow Routing
+        </button>
+      </div>
+      <div class="input-row">
+        <textarea id="question-input" placeholder="Ask an executive question across live SQL operations data and enterprise policy documents..."></textarea>
+        <button class="primary" id="ask-btn" onclick="askAgent()">Run Agentic Analysis</button>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="card">
+        <h2>
+          <span>Grounded Executive Answer</span>
+          <span id="latency-meta" style="font-size:12px; color:#94a3b8;"></span>
+        </h2>
+        <div id="answer-output" class="answer-box">
+          Select one of the stage demo prompts above or ask any question. The Python agent will dynamically generate read-only SQL, cross-reference unstructured policy/SLA documents, and calculate financial recovery impact.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <span>Auditable Tool-Call Trajectory</span>
+          <span id="trace-count" style="font-size:12px; color:#94a3b8;">0 tool calls</span>
+        </h2>
+        <div id="trace-output">
+          <div style="color:#94a3b8; font-size:13px;">
+            Every tool invocation (`run_readonly_sql`, `search_policy_docs`, `compute_recovery_plan`) appears here in real time with exact SQL, row counts, and policy citations.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('sql', this)">SQL Guardrail Sandbox (Live Security Test)</button>
+        <button class="tab-btn" onclick="switchTab('docs', this)">Enterprise Policy &amp; SLA Corpus</button>
+        <button class="tab-btn" onclick="switchTab('schema', this)">Database Schema</button>
+      </div>
+
+      <div id="tab-sql">
+        <div style="display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+          <button class="chip" onclick="runSandboxSQL('SELECT payer_name, denial_reason, COUNT(*) AS claims, ROUND(SUM(billed_usd), 2) AS denied_usd FROM payer_claims WHERE status = \'DENIED\' GROUP BY 1, 2 ORDER BY denied_usd DESC')">
+            Sample: Denied Claims by Payer
+          </button>
+          <button class="chip" onclick="runSandboxSQL('SELECT report_month, clinic_id, device_id, uptime_pct, unscheduled_downtime_hours, maintenance_cost_usd, alert_status FROM equipment_telemetry WHERE alert_status != \'HEALTHY\' ORDER BY report_month')">
+            Sample: Scanner SLA Breaches
+          </button>
+          <button class="danger-btn" onclick="runSandboxSQL('DROP TABLE payer_claims;')">
+            Negative Security Test: Attempt DROP TABLE
+          </button>
+        </div>
+        <div class="input-row">
+          <textarea id="sql-input" style="min-height:44px; font-family:monospace;">SELECT payer_name, COUNT(*) AS denied_claims, ROUND(SUM(billed_usd), 2) AS denied_usd FROM payer_claims WHERE status = 'DENIED' GROUP BY payer_name ORDER BY denied_usd DESC</textarea>
+          <button class="primary" onclick="runSandboxSQL()">Run Safe SQL</button>
+        </div>
+        <div id="sql-result" style="margin-top:12px;"></div>
+      </div>
+
+      <div id="tab-docs" class="hidden"></div>
+      <div id="tab-schema" class="hidden"></div>
+    </section>
+  </main>
+
+  <script>
+    const fmtUSD = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n || 0);
+
+    async function loadOverview() {
+      const res = await fetch('/api/overview');
+      const data = await res.json();
+
+      document.getElementById('kpi-rev').textContent = fmtUSD(data.kpis.total_90d_revenue_usd);
+      document.getElementById('kpi-exams').textContent = `${data.kpis.total_exams_completed.toLocaleString()} exams completed`;
+      document.getElementById('kpi-denied').textContent = fmtUSD(data.kpis.denied_claims_usd);
+      document.getElementById('kpi-denied-cnt').textContent = `${data.kpis.denied_claims_count} of ${data.kpis.total_claims_count} claims denied`;
+      document.getElementById('kpi-breaches').textContent = data.kpis.total_sla_breaches.toLocaleString();
+      document.getElementById('kpi-alerts').textContent = data.kpis.equipment_sla_alerts;
+
+      const healthRes = await fetch('/api/health');
+      const health = await healthRes.json();
+      const bBadge = document.getElementById('backend-badge');
+      bBadge.textContent = `Data: ${health.data_backend.toUpperCase()}`;
+      bBadge.className = 'badge ok';
+
+      const aBadge = document.getElementById('auth-badge');
+      if (health.ai_auth.ready) {
+        aBadge.textContent = `Gemini (${health.ai_auth.mode}): ${health.ai_auth.model}`;
+        aBadge.className = 'badge ok';
+      } else {
+        aBadge.textContent = 'Gemini: Configure Vertex AI / API Key';
+        aBadge.className = 'badge warn';
+      }
+
+      document.getElementById('tab-docs').innerHTML = data.policy_docs.map(d => `
+        <div class="trace-item">
+          <div class="trace-head">
+            <span><span class="tool-pill">${d.doc_id}</span> ${d.title}</span>
+            <span style="color:#94a3b8;">${d.category} • ${d.effective_date}</span>
+          </div>
+          <div style="color:#cbd5e1;">${d.excerpt}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('tab-schema').innerHTML = data.schema.map(t => `
+        <div class="trace-item">
+          <div class="trace-head">
+            <span class="tool-pill">${t.table}</span>
+            <span style="color:#94a3b8;">${t.row_count ?? ''} rows</span>
+          </div>
+          <pre>${JSON.stringify(t.columns || t.note, null, 2)}</pre>
+        </div>
+      `).join('');
+    }
+
+    function usePrompt(text) {
+      document.getElementById('question-input').value = text;
+      askAgent();
+    }
+
+    async function askAgent() {
+      const q = document.getElementById('question-input').value.trim();
+      if (!q) return;
+      const btn = document.getElementById('ask-btn');
+      const out = document.getElementById('answer-output');
+      const traceEl = document.getElementById('trace-output');
+
+      btn.disabled = true;
+      btn.textContent = 'Reasoning...';
+      out.innerHTML = 'Running live Gemini function-calling loop over SQL + Policy Docs...';
+      traceEl.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          out.innerHTML = `<div class="error-banner">${data.detail || 'Request failed'}</div>`;
+          return;
+        }
+        out.textContent = data.answer_markdown;
+        document.getElementById('latency-meta').textContent = `${data.model} • ${data.total_duration_ms} ms`;
+        document.getElementById('trace-count').textContent = `${data.trace.length} tool call(s)`;
+
+        traceEl.innerHTML = data.trace.map((step, i) => `
+          <div class="trace-item">
+            <div class="trace-head">
+              <span>#${i + 1} <span class="tool-pill ${step.status === 'error' ? 'err' : ''}">${step.tool}</span></span>
+              <span style="color:#94a3b8;">Round ${step.round} • ${step.duration_ms} ms</span>
+            </div>
+            <pre>${JSON.stringify(step.arguments, null, 2)}</pre>
+            <pre>${JSON.stringify(step.result, null, 2).slice(0, 900)}${JSON.stringify(step.result).length > 900 ? '\n... (truncated)' : ''}</pre>
+          </div>
+        `).join('');
+      } catch (err) {
+        out.innerHTML = `<div class="error-banner">Network error: ${err}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Agentic Analysis';
+      }
+    }
+
+    async function runSandboxSQL(overrideSql) {
+      const input = document.getElementById('sql-input');
+      if (overrideSql) input.value = overrideSql;
+      const target = document.getElementById('sql-result');
+      target.innerHTML = 'Executing...';
+      const res = await fetch('/api/sql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql: input.value })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        target.innerHTML = `<div class="error-banner">HTTP ${res.status} — ${data.detail}</div>`;
+        return;
+      }
+      if (!data.rows.length) {
+        target.innerHTML = '<div style="color:#94a3b8;">0 rows returned.</div>';
+        return;
+      }
+      const cols = data.columns;
+      const head = cols.map(c => `<th>${c}</th>`).join('');
+      const body = data.rows.map(r => `<tr>${cols.map(c => `<td>${r[c]}</td>`).join('')}</tr>`).join('');
+      target.innerHTML = `<div style="font-size:12px; color:#86efac;">Executed safely (${data.row_count} rows): <code>${data.executed_sql}</code></div><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function switchTab(name, btn) {
+      ['sql', 'docs', 'schema'].forEach(t => document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    loadOverview();
+  </script>
+</body>
+</html>
